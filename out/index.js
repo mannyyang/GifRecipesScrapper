@@ -15,6 +15,7 @@ let previousData = {
 };
 osmosis
     .get('https://www.reddit.com/r/GifRecipes/')
+    .paginate('.nav-buttons .next-button a', 5)
     .find('.thing.link')
     .set({
     id: '@data-fullname',
@@ -33,7 +34,7 @@ osmosis
             comment: '.entry .usertext-body'
         }]
 })
-    .paginate('.nav-buttons .next-button a@href', 5)
+    .delay(100)
     .data(function (listing) {
     //console.log(listing)
     if (!previousData) {
@@ -43,7 +44,7 @@ osmosis
         previousData.comments = previousData.comments.concat(listing.comments);
     }
     else {
-        if (['t3_5s58rb', 't3_6dz9qm'].indexOf(previousData.id) < 0 && previousData.linkType !== 'i.redd.it') {
+        if (['t3_5s58rb', 't3_6dz9qm'].indexOf(previousData.id) < 0 && ['i.redd.it', 'self.GifRecipes'].indexOf(previousData.linkType) < 0) {
             let recipe = "";
             for (let i = 0; i < previousData.comments.length; i++) {
                 if ((previousData.comments[i].comment.search(/ingredients/i) > -1)
@@ -85,58 +86,4 @@ function isImgurSrc(url) {
 function isGfySrc(url) {
     return url.indexOf('gfycat.com') >= 0;
 }
-// .set('category')
-// .follow('@href')
-// .paginate('.totallink + a.button.next:first')
-// .find('p > a')
-// .follow('@href')
-// .set({
-//     'title':        'section > h2',
-//     'description':  '#postingbody',
-//     'subcategory':  'div.breadbox > span[4]',
-//     'date':         'time@datetime',
-//     'latitude':     '#map@data-latitude',
-//     'longitude':    '#map@data-longitude',
-//     'images':       ['img@src']
-// })
-// 	//.paginate('.nav-buttons .next-button a@href')
-// 	.data(function (listing) {
-// 		console.log(listing)
-// 		// do something with listing data
-// 	})
-// .log(console.log)
-// .error(console.log)
-// .debug(console.log)
-// import * as Xray from 'x-ray';
-// const x = Xray(
-// 	{
-// 		filters: {
-// 			changeVidSrcExt: function (value) {
-// 				if (isImgurSrc(value)) {
-// 					return value.replace('.gifv', '.mp4');
-// 				}
-// 				else if (isGfySrc('gfycat.com')) {
-// 					if (value.indexOf('.mp4') >= 0) {
-// 						return value;
-// 					}
-// 					else {
-// 						return value.replace('gfycat.', 'giant.gfycat.') + '.mp4';
-// 					}
-// 				}
-// 				else {
-// 					return value;
-// 				}
-// 			},
-// 			trimID: function (value) {
-// 				return value.replace('thing_t3_', '');
-// 			}
-// 		}
-// 	}
-// );
-// function isImgurSrc(url) {
-// 	return url.indexOf('i.imgur.com') >= 0;
-// }
-// function isGfySrc(url) {
-// 	return url.indexOf('gfycat.com') >= 0;
-// } 
 //# sourceMappingURL=index.js.map
