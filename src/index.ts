@@ -1,6 +1,7 @@
 import * as osmosis from 'osmosis';
 import * as merge from 'deepmerge';
 import * as elasticsearch from 'elasticsearch';
+import * as moment from 'moment';
 
 const ESClient = new elasticsearch.Client({
 	host: 'localhost:9200',
@@ -12,7 +13,9 @@ let previousData = {
 	author: '',
 	link: '',
 	linkType: '',
-	comments: []
+	comments: [],
+	createdAt: moment(),
+	isProcessed: false
 };
 
 osmosis
@@ -36,7 +39,7 @@ osmosis
 			comment: '.entry .usertext-body'
 		}]
 	})
-	.delay(100)
+	//.delay(100)
 	.data(function (listing) {
 		//console.log(listing)
 		if (!previousData) {
@@ -46,7 +49,7 @@ osmosis
 			previousData.comments = previousData.comments.concat(listing.comments);
 		}
 		else {
-			if (['t3_5s58rb', 't3_6dz9qm'].indexOf(previousData.id) < 0 && ['i.redd.it', 'self.GifRecipes'].indexOf(previousData.linkType) < 0) {
+			if (['t3_5s58rb', 't3_6dz9qm', 't3_62puv2', 't3_5pbacr'].indexOf(previousData.id) < 0 && ['i.redd.it', 'self.GifRecipes'].indexOf(previousData.linkType) < 0) {
 				let recipe = "";
 
 				for (let i = 0; i < previousData.comments.length; i++) {
@@ -57,11 +60,12 @@ osmosis
 				}
 
 				previousData.link = updateVideoSrc(previousData.link);
+				previousData.createdAt = moment();
 
 				ESClient.index({
 					// opType: 'index',
-					index: 'reddit',
-					type: 'post',
+					index: 'raw',
+					type: 'recipe',
 					id: previousData.id,
 					body: {
 						...previousData,
