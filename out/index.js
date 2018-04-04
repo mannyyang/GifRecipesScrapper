@@ -4,7 +4,7 @@ const osmosis = require("osmosis");
 const elasticsearch = require("elasticsearch");
 const moment = require("moment");
 const ESClient = new elasticsearch.Client({
-    host: 'localhost:9200',
+    host: 'https://search-quixcipes-u5h75uljnqooatmnakqcvn3npu.us-west-1.es.amazonaws.com',
     log: 'trace'
 });
 let previousData = {
@@ -14,20 +14,24 @@ let previousData = {
     linkType: '',
     comments: [],
     createdAt: moment(),
-    isProcessed: false
+    isProcessed: false,
+    permalink: '',
+    source: 'reddit'
 };
 osmosis
     .get('https://www.reddit.com/r/GifRecipes/')
-    .paginate('.nav-buttons .next-button a', 5)
+    .paginate('.nav-buttons .next-button a', 800)
     .find('.thing.link')
     .set({
     id: '@data-fullname',
     title: '.title a',
     author: '@data-author',
     description: '@data-context',
+    srcLink: '@data-url',
     link: '@data-url',
     linkType: '@data-domain',
     timeStamp: '@data-timestamp',
+    permalink: '@data-permalink'
 })
     .follow('.entry .flat-list a.comments@href')
     .find('.comment')
@@ -40,7 +44,7 @@ osmosis
     .data(function (listing) {
     //console.log(listing)
     if (!previousData) {
-        previousData = listing;
+        previousData = Object.assign({}, previousData, listing);
     }
     else if (previousData.id === listing.id) {
         previousData.comments = previousData.comments.concat(listing.comments);
@@ -58,8 +62,8 @@ osmosis
             previousData.createdAt = moment();
             ESClient.index({
                 // opType: 'index',
-                index: 'raw',
-                type: 'recipe',
+                index: 'recipes',
+                type: 'raw',
                 id: previousData.id,
                 body: Object.assign({}, previousData, { recipe: recipe })
             });
