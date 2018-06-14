@@ -1,29 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const osmosis = require("osmosis");
-const elasticsearch = require("elasticsearch");
-const moment = require("moment");
-const ESClient = new elasticsearch.Client({
-    host: 'https://search-quixcipes-u5h75uljnqooatmnakqcvn3npu.us-west-1.es.amazonaws.com',
-    log: 'trace'
-});
+const axios_1 = require("axios");
 let previousData = {
     id: '',
     author: '',
     link: '',
     linkType: '',
     comments: [],
-    createdAt: moment(),
+    createdAt: new Date(),
     isProcessed: false,
     permalink: '',
     source: 'reddit'
 };
 osmosis
-    .get('https://www.reddit.com/r/GifRecipes/')
+    .get('https://old.reddit.com/r/GifRecipes/')
     .paginate('.nav-buttons .next-button a', 800)
     .find('.thing.link')
     .set({
     id: '@data-fullname',
+    reddit_id: '@data-fullname',
     title: '.title a',
     author: '@data-author',
     description: '@data-context',
@@ -59,14 +55,23 @@ osmosis
                 }
             }
             previousData.link = updateVideoSrc(previousData.link);
-            previousData.createdAt = moment();
-            ESClient.index({
-                // opType: 'index',
-                index: 'recipes',
-                type: 'raw',
-                id: previousData.id,
-                body: Object.assign({}, previousData, { recipe: recipe })
+            previousData.createdAt = new Date();
+            console.log(previousData);
+            axios_1.default.post('http://localhost:1337/recipe', Object.assign({}, previousData, { recipe: recipe }))
+                .then(res => {
+                // console.log(res);
+                console.log("succes");
             });
+            // ESClient.index({
+            // 	// opType: 'index',
+            // 	index: 'recipes',
+            // 	id: previousData.id,
+            // 	body: {
+            // 		type: 'raw',
+            // 		...previousData,
+            // 		recipe: recipe
+            // 	}
+            // });
         }
         previousData = listing;
     }

@@ -1,12 +1,6 @@
 import * as osmosis from 'osmosis';
-import * as merge from 'deepmerge';
-import * as elasticsearch from 'elasticsearch';
 import * as moment from 'moment';
-
-const ESClient = new elasticsearch.Client({
-	host: 'https://search-quixcipes-u5h75uljnqooatmnakqcvn3npu.us-west-1.es.amazonaws.com',
-	log: 'trace'
-});
+import axios from 'axios';
 
 let previousData = {
 	id: '',
@@ -14,18 +8,19 @@ let previousData = {
 	link: '',
 	linkType: '',
 	comments: [],
-	createdAt: moment(),
+	createdAt: new Date(),
 	isProcessed: false,
 	permalink: '',
 	source: 'reddit'
 };
 
 osmosis
-	.get('https://www.reddit.com/r/GifRecipes/')
+	.get('https://old.reddit.com/r/GifRecipes/')
 	.paginate('.nav-buttons .next-button a', 800)
 	.find('.thing.link')
 	.set({
 		id: '@data-fullname',
+		reddit_id: '@data-fullname',
 		title: '.title a',
 		author: '@data-author',
 		description: '@data-context',
@@ -64,18 +59,29 @@ osmosis
 				}
 
 				previousData.link = updateVideoSrc(previousData.link);
-				previousData.createdAt = moment();
+				previousData.createdAt = new Date();
 
-				ESClient.index({
-					// opType: 'index',
-					index: 'recipes',
-					type: 'raw',
-					id: previousData.id,
-					body: {
-						...previousData,
-						recipe: recipe
-					}
+				console.log(previousData)
+
+				axios.post('http://localhost:1337/recipe', {
+					...previousData,
+					recipe: recipe
+				})
+				.then(res => {
+					// console.log(res);
+					console.log("succes")
 				});
+
+				// ESClient.index({
+				// 	// opType: 'index',
+				// 	index: 'recipes',
+				// 	id: previousData.id,
+				// 	body: {
+				// 		type: 'raw',
+				// 		...previousData,
+				// 		recipe: recipe
+				// 	}
+				// });
 			}
 
 			previousData = listing;
